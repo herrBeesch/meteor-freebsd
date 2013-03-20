@@ -192,5 +192,7 @@ echo "${BUNDLE_VERSION}" > .bundle_version.txt
 rm -rf build
 
 tar czf "${TARGET_DIR}/dev_bundle_${UNAME}_${ARCH}_${BUNDLE_VERSION}.tar.gz" .
+mkdir "${TARGET_DIR}/dev_bundle"
+cp -r . "${TARGET_DIR}/dev_bundle"
 
 echo DONE
