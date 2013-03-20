@@ -31,6 +31,14 @@ elif [ "$UNAME" == "Darwin" ] ; then
     fi
 
     MONGO_OS="osx"
+elif [ "$UNAME" == "FreeBSD" ] ; then
+
+    if [ "$ARCH" != "i686" -a "$ARCH" != "x86_64" -a "$ARCH" != "amd64" ] ; then
+        echo "Unsupported architecture: $ARCH"
+        echo "Meteor only supports i686 and x86_64 for now."
+        exit 1
+    fi
+    MONGO_OS="freeBSD"
 else
     echo "This OS not yet supported"
     exit 1
@@ -41,7 +49,7 @@ fi
 cd `dirname $0`/..
 TARGET_DIR=`pwd`
 
-DIR=`mktemp -d -t generate-dev-bundle-XXXXXXXX`
+DIR=`mktemp -d -t generate-dev-bundle-freeBSD`
 trap 'rm -rf "$DIR" >/dev/null 2>&1' 0
 
 echo BUILDING IN "$DIR"
@@ -59,8 +67,8 @@ cd node
 git checkout v0.8.18
 
 ./configure --prefix="$DIR"
-make -j4
-make install PORTABLE=1
+gmake -j4
+gmake install PORTABLE=1
 # PORTABLE=1 is a node hack to make npm look relative to itself instead
 # of hard coding the PREFIX.
 
@@ -68,6 +76,7 @@ make install PORTABLE=1
 export PATH="$DIR/bin:$PATH"
 
 which node
+NODE_VERSION=`node -v`
 
 which npm
 
@@ -77,6 +86,9 @@ which npm
 # you update version numbers.
 
 cd "$DIR/lib/node_modules"
+# required to cpompile fibers
+npm install node-gyp
+
 npm install connect@1.9.2 # not 2.x yet. sockjs doesn't work w/ new connect
 npm install optimist@0.3.5
 npm install coffee-script@1.5.0
@@ -118,41 +130,60 @@ npm install progress@0.0.5
 # which make the dev bundle much bigger. We need a better solution.
 npm install mailcomposer@0.1.15
 
-# If you update the version of fibers in the dev bundle, also update the "npm
-# install" command in docs/client/concepts.html and in the README in
-# app/lib/bundler.js.
-npm install fibers@1.0.0
-# Fibers ships with compiled versions of its C code for a dozen platforms. This
-# bloats our dev bundle, and confuses dpkg-buildpackage and rpmbuild into
-# thinking that the packages need to depend on both 32- and 64-bit versions of
-# libstd++. Remove all the ones other than our architecture. (Expression based
-# on build.js in fibers source.)
-FIBERS_ARCH=$(node -p -e 'process.platform + "-" + process.arch + "-v8-" + /[0-9]+\.[0-9]+/.exec(process.versions.v8)[0]')
-cd fibers/bin
-mv $FIBERS_ARCH ..
-rm -rf *
-mv ../$FIBERS_ARCH .
-cd ../..
 
 
-# Download and install mongodb.
-# To see the mongo changelog, go to http://www.mongodb.org/downloads,
-# click 'changelog' under the current version, then 'release notes' in
-# the upper right.
-cd "$DIR"
-MONGO_VERSION="2.2.1"
-MONGO_NAME="mongodb-${MONGO_OS}-${ARCH}-${MONGO_VERSION}"
-MONGO_URL="http://fastdl.mongodb.org/${MONGO_OS}/${MONGO_NAME}.tgz"
-curl "$MONGO_URL" | tar -xz
-mv "$MONGO_NAME" mongodb
-
-# don't ship a number of mongo binaries. they are big and unused. these
-# could be deleted from git dev_bundle but not sure which we'll end up
-# needing.
-cd mongodb/bin
-rm bsondump mongodump mongoexport mongofiles mongoimport mongorestore mongos mongosniff mongostat mongotop mongooplog mongoperf
-cd ../..
-
+if [ "$UNAME" == "FreeBSD" ] ; then
+  # node-gyp fibers on freebsd
+  cd "$DIR/lib/node_modules"
+  git clone git://github.com/laverdet/node-fibers.git fibers
+  cd fibers/
+  node-gyp configure
+  node-gyp build
+  mkdir "bin/freebsd-$ARCH-v8-$NODE_VERSION/"
+  cp build/Release/fibers.node "bin/freebsd-$ARCH-v8-$NODE_VERSION/"
+  cd ..
+  
+  # link mongo executables
+  cd "$DIR"
+  mkdir mongodb
+  mkdir mongodb/bin
+  ln -s `which mongo` mongodb/bin/mongo
+  ln -s `which mongod` mongodb/bin/mongod   
+else
+  # If you update the version of fibers in the dev bundle, also update the "npm
+  # install" command in docs/client/concepts.html and in the README in
+  # app/lib/bundler.js.
+  npm install fibers@1.0.0
+  # Fibers ships with compiled versions of its C code for a dozen platforms. This
+  # bloats our dev bundle, and confuses dpkg-buildpackage and rpmbuild into
+  # thinking that the packages need to depend on both 32- and 64-bit versions of
+  # libstd++. Remove all the ones other than our architecture. (Expression based
+  # on build.js in fibers source.)
+  FIBERS_ARCH=$(node -p -e 'process.platform + "-" + process.arch + "-v8-" + /[0-9]+\.[0-9]+/.exec(process.versions.v8)[0]')
+  cd fibers/bin
+  mv $FIBERS_ARCH ..
+  rm -rf *
+  mv ../$FIBERS_ARCH .
+  cd ../..
+  
+  Download and install mongodb.
+  To see the mongo changelog, go to http://www.mongodb.org/downloads,
+  click 'changelog' under the current version, then 'release notes' in
+  the upper right.
+  cd "$DIR"
+  MONGO_VERSION="2.2.1"
+  MONGO_NAME="mongodb-${MONGO_OS}-${ARCH}-${MONGO_VERSION}"
+  MONGO_URL="http://fastdl.mongodb.org/${MONGO_OS}/${MONGO_NAME}.tgz"
+  curl "$MONGO_URL" | tar -xz
+  mv "$MONGO_NAME" mongodb
+  
+  # don't ship a number of mongo binaries. they are big and unused. these
+  # could be deleted from git dev_bundle but not sure which we'll end up
+  # needing.
+  cd mongodb/bin
+  rm bsondump mongodump mongoexport mongofiles mongoimport mongorestore mongos mongosniff mongostat mongotop mongooplog mongoperf
+  cd ../..  
+fi
 
 echo BUNDLING
 
