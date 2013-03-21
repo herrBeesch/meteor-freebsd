@@ -142,8 +142,10 @@ if [ "$UNAME" == "FreeBSD" ] ; then
   cd fibers/
   node-gyp configure
   node-gyp build
-  mkdir "bin/freebsd-$ARCH-v8-$NODE_VERSION/"
-  cp build/Release/fibers.node "bin/freebsd-$ARCH-v8-$NODE_VERSION/"
+  FIBERS_DIRECTORY="bin/freebsd-$ARCH-v8-$NODE_VERSION/"
+  mkdir bin
+  mkdir $FIBERS_DIRECTORY
+  cp build/Release/fibers.node $FIBERS_DIRECTORY
   cd ..
   
   # link mongo executables
