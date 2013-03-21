@@ -143,7 +143,6 @@ if [ "$UNAME" == "FreeBSD" ] ; then
   node-gyp configure
   node-gyp build
   FIBERS_DIRECTORY="bin/freebsd-$ARCH-v8-$NODE_VERSION/"
-  mkdir bin
   mkdir $FIBERS_DIRECTORY
   cp build/Release/fibers.node $FIBERS_DIRECTORY
   cd ..
@@ -197,7 +196,10 @@ echo "${BUNDLE_VERSION}" > .bundle_version.txt
 rm -rf build
 
 tar czf "${TARGET_DIR}/dev_bundle_${UNAME}_${ARCH}_${BUNDLE_VERSION}.tar.gz" .
+echo "meteor dev_bundle created: ${TARGET_DIR}/dev_bundle_${UNAME}_${ARCH}_${BUNDLE_VERSION}.tar.gz"
 mkdir "${TARGET_DIR}/dev_bundle"
 cp -r . "${TARGET_DIR}/dev_bundle"
+
+echo "Bundle created and installed to ${TARGET_DIR}/dev_bundle"
 
 echo DONE
