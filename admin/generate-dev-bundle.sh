@@ -142,7 +142,7 @@ if [ "$UNAME" == "FreeBSD" ] ; then
   cd fibers/
   node-gyp configure
   node-gyp build
-  FIBERS_DIRECTORY="bin/freebsd-$ARCH-v8-$NODE_VERSION/"
+  FIBERS_DIRECTORY="bin/freebsd-$ARCH-v8-3.11/"
   mkdir $FIBERS_DIRECTORY
   cp build/Release/fibers.node $FIBERS_DIRECTORY
   cd ..
