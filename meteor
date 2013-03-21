@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 BUNDLE_VERSION=0.2.23
 
