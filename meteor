@@ -45,8 +45,6 @@ fi
 SCRIPT_DIR=$(pwd -P)
 cd "$ORIG_DIR"
 
-
-
 function install_dev_bundle {
     set -e
     trap "echo Failed to install dependency kit." EXIT
