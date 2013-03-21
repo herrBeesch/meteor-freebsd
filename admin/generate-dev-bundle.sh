@@ -76,7 +76,8 @@ gmake install PORTABLE=1
 export PATH="$DIR/bin:$PATH"
 
 which node
-NODE_VERSION=`node -v`
+# NODE_VERSION=`node -v`
+NODE_VERSION=v0.8.18
 
 which npm
 
@@ -140,7 +141,7 @@ if [ "$UNAME" == "FreeBSD" ] ; then
   node-gyp configure
   node-gyp build
   mkdir "bin/freebsd-$ARCH-v8-$NODE_VERSION/"
-  cp build/Release/fibers.node "bin/freebsd-$ARCH-v8-$NODE_VERSION/"
+  cp build/Release/fibers.node "bin/freebsd-x64-v8-$NODE_VERSION/"
   cd ..
   
   # link mongo executables
