@@ -1,4 +1,4 @@
-#!/usr/local/bin/bash
+#!/usr/local/bin/sh
 
 set -e
 set -u
@@ -38,6 +38,7 @@ elif [ "$UNAME" == "FreeBSD" ] ; then
         echo "Meteor only supports i686 and x86_64 for now."
         exit 1
     fi
+    ARCH="x64"
     MONGO_OS="freeBSD"
 else
     echo "This OS not yet supported"
@@ -64,7 +65,10 @@ git clone git://github.com/joyent/node.git
 cd node
 # When upgrading node versions, also update the values of MIN_NODE_VERSION at
 # the top of app/meteor/meteor.js and app/server/server.js.
-git checkout v0.8.18
+# NODE_VERSION=`node -v`
+NODE_VERSION=v0.8.18
+
+git checkout $NODE_VERSION
 
 ./configure --prefix="$DIR"
 gmake -j4
@@ -76,8 +80,6 @@ gmake install PORTABLE=1
 export PATH="$DIR/bin:$PATH"
 
 which node
-# NODE_VERSION=`node -v`
-NODE_VERSION=v0.8.18
 
 which npm
 
@@ -141,7 +143,7 @@ if [ "$UNAME" == "FreeBSD" ] ; then
   node-gyp configure
   node-gyp build
   mkdir "bin/freebsd-$ARCH-v8-$NODE_VERSION/"
-  cp build/Release/fibers.node "bin/freebsd-x64-v8-$NODE_VERSION/"
+  cp build/Release/fibers.node "bin/freebsd-$ARCH-v8-$NODE_VERSION/"
   cd ..
   
   # link mongo executables
