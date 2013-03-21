@@ -1,4 +1,4 @@
-#!/usr/local/bin/sh
+#!/usr/local/bin/bash
 
 set -e
 set -u
